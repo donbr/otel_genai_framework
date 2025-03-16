@@ -1,9 +1,8 @@
-# README.md
 # OpenTelemetry GenAI Validation Framework
 
 A comprehensive validation framework for testing OpenTelemetry instrumentation of GenAI systems against official semantic conventions.
 
-Version: 0.1.0
+Version: 0.2.0
 
 ## Overview
 
@@ -12,6 +11,7 @@ This framework provides tools to validate that your OpenTelemetry instrumentatio
 ## Features
 
 - Validates spans, events, and metrics against GenAI semantic conventions
+- Supports scenario-based testing with YAML definition files
 - In-memory testing with optional visualization through OTLP exporters
 - Comprehensive test scenarios covering basic agent interactions, tool usage, reasoning flows, and error handling
 - Rich console output with detailed test results
@@ -22,18 +22,50 @@ This framework provides tools to validate that your OpenTelemetry instrumentatio
 1. Clone this repository
 2. Install requirements:
    ```bash
-   pip install opentelemetry-api opentelemetry-sdk opentelemetry-exporter-otlp-proto-grpc rich
+   pip install opentelemetry-api opentelemetry-sdk opentelemetry-exporter-otlp-proto-grpc rich pyyaml
    ```
+
+## Prerequisites
+
+For full functionality with telemetry visualization, you'll need Jaeger running:
+
+```bash
+# Start Jaeger with Docker
+docker run --rm --name jaeger \
+  -p 16686:16686 \
+  -p 4317:4317 \
+  -p 4318:4318 \
+  -p 5778:5778 \
+  -p 9411:9411 \
+  jaegertracing/jaeger:latest
+```
+
+```pwsh
+# PowerShell version
+docker run --rm --name jaeger `
+  -p 16686:16686 `
+  -p 4317:4317 `
+  -p 4318:4318 `
+  -p 5778:5778 `
+  -p 9411:9411 `
+  jaegertracing/jaeger:latest
+```
+
+The Jaeger UI will be available at: http://localhost:16686
 
 ## Usage
 
-### Running the full test suite
+### Running the Test Suite
 
 ```bash
+# Run all tests
 python validation_suite.py
+
+# Skip sending telemetry to OTLP/Jaeger (for faster testing without visualization)
+python validation_suite.py --skip-otlp
 ```
 
-### Running specific tests
+### Running Specific Tests
 
 ```bash
 # Run only the tool usage test
@@ -41,13 +73,32 @@ python validation_suite.py --test tool
 
 # Run only the error handling test
 python validation_suite.py --test error
+
+# Run with debug logging
+python validation_suite.py --debug --test basic
+```
+
+### Using Scenario-Based Testing
+
+The recommended approach for new tests is to use scenario-based testing with YAML definitions:
+
+```bash
+# Run a specific scenario from YAML file
+python scenario_runner.py --scenario scenarios/basic_agent_scenario.yaml
+
+# Run with debug logging
+python scenario_runner.py --scenario scenarios/tool_usage_scenario.yaml --debug
+
+# Skip metrics validation
+python scenario_runner.py --scenario scenarios/reasoning_flow_scenario.yaml --no-metrics
 ```
 
 ### Options
 
-- `--skip-otlp`: Skip sending telemetry to OTLP endpoint (useful for isolated testing)
+- `--skip-otlp`: Skip sending telemetry to OTLP endpoint (useful for isolated testing without Jaeger)
 - `--debug`: Enable debug logging
 - `--test TEST`: Run only the specified test (`basic`, `tool`, `reasoning`, `error`, or `all`)
+- `--no-metrics`: Disable metrics collection (for scenario_runner.py)
 
 ## Test Scenarios
 
@@ -60,25 +111,63 @@ The framework includes the following test scenarios:
 | tool | Tool Usage | Agent using external tools with function calls |
 | error | Error Handling | Error handling, retries, and fallback strategies |
 
+All these scenarios are available both through `validation_suite.py` and as YAML definitions in the `scenarios/` directory.
+
+## Scenario-Based Testing
+
+The framework supports defining test scenarios in YAML files:
+
+```yaml
+# Example scenario definition
+name: "Basic Agent Test"
+description: "Tests a simple query-response pattern with a GenAI agent"
+
+configuration:
+  service_name: "agent-service"
+  trace_validation: true
+  metrics_validation: true
+
+spans:
+  - name: "chat claude-3-opus"
+    expected_attributes:
+      gen_ai.system: "anthropic"
+      gen_ai.operation.name: "chat"
+      gen_ai.request.model: "claude-3-opus"
+    expected_events:
+      - name: "gen_ai.user.message"
+        attributes:
+          content: "What is the capital of France?"
+      - name: "gen_ai.assistant.message"
+        attributes:
+          content: "The capital of France is Paris."
+
+schema_validation:
+  span_schema: "span.gen_ai.client"
+  event_schemas:
+    - "event.gen_ai.user.message"
+    - "event.gen_ai.assistant.message"
+```
+
+See the `scenarios/` directory for more comprehensive examples.
+
 ## Semantic Convention Validation
 
 The framework supports two levels of validation:
 
 1. **Basic Attribute Validation**: Verifies span attributes match expected values (default).
-2. **Schema-Based Validation**: Validates against official OpenTelemetry GenAI schemas (advanced).
+2. **Schema-Based Validation**: Validates against official OpenTelemetry GenAI schemas.
 
 For full schema validation:
 
-1. Download schema files:
-```bash
-# Download schema files from GitHub
-python -c "from schema_integration_example import download_otel_schema; download_otel_schema()"
+1. The framework will automatically download schema files to the `schemas/` directory if they don't exist:
+```python
+from schema_integration import SchemaValidator
+validator = SchemaValidator()
 ```
 
-2. Enable schema validation:
+2. Enhance the validator with schema capabilities:
 ```python
-# In your test script
-from schema_integration_example import enhance_validator_with_schema
+from schema_integration import enhance_validator_with_schema
 from otel_genai_validator import GenAISpanValidator
 
 # Enhance the validator with schema capabilities
@@ -91,11 +180,30 @@ This validates against the official semantic conventions defined by the OpenTele
 
 ## Architecture
 
-The framework consists of three main components:
+The framework consists of several key components:
 
 1. **OTelGenAIValidator**: Core validation framework that manages the OpenTelemetry setup
 2. **GenAISpanValidator**: Utility class for validating spans against semantic conventions
-3. **Test Scenarios**: Individual test cases that simulate GenAI operations
+3. **SchemaValidator**: Validates telemetry against OpenTelemetry GenAI SIG schemas
+4. **ScenarioRunner**: Runs scenario-based tests defined in YAML files
+5. **Test Scenarios**: Individual test cases that simulate GenAI operations
+
+## Directory Structure
+
+```
+otel_genai_framework/
+├── README.md                     # Project documentation
+├── otel_genai_validator.py       # Core validation framework
+├── validation_suite.py           # Main test runner
+├── genai_test_scenarios.py       # Test scenario implementations
+├── scenario_runner.py            # YAML scenario runner
+├── schema_integration.py         # Schema validation integration
+├── semantic_validator.py         # Schema validation utilities
+├── scenarios/                    # YAML test scenario definitions
+└── schemas/                      # Auto-downloaded OTel schema files
+```
+
+For more details, see [project_structure.md](project_structure.md).
 
 ## Contributing
 
@@ -104,27 +212,3 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
-
-## Using Jaeger for Tracing
-
-= review the [getting started guide](https://www.jaegertracing.io/docs/2.4/getting-started/) for details
-
-```pwsh
-docker run --rm --name jaeger `
-  -p 16686:16686 `
-  -p 4317:4317 `
-  -p 4318:4318 `
-  -p 5778:5778 `
-  -p 9411:9411 `
-  jaegertracing/jaeger:2.4.0
-```
-
-```bash
-docker run --rm --name jaeger \
-  -p 16686:16686 \
-  -p 4317:4317 \
-  -p 4318:4318 \
-  -p 5778:5778 \
-  -p 9411:9411 \
-  jaegertracing/jaeger:2.4.0
-```

@@ -1,0 +1,55 @@
+# Basic Agent Test Scenario
+name: "Basic Agent Test"
+description: "Tests a simple query-response pattern with a GenAI agent"
+version: "1.0"
+
+# Test configuration
+configuration:
+  service_name: "agent-service"
+  trace_validation: true
+  metrics_validation: true
+
+# Expected spans and events
+spans:
+  - name: "chat claude-3-opus"
+    expected_attributes:
+      gen_ai.system: "anthropic"
+      gen_ai.operation.name: "chat"
+      gen_ai.request.model: "claude-3-opus"
+      gen_ai.usage.input_tokens: 150
+      gen_ai.usage.output_tokens: 75
+    expected_events:
+      - name: "gen_ai.user.message"
+        attributes:
+          content: "What is the capital of France?"
+      - name: "gen_ai.assistant.message"
+        attributes:
+          content: "The capital of France is Paris."
+    expected_metrics:
+      - name: "gen_ai.client.token.usage"
+        attributes:
+          gen_ai.token.type: "input"
+          gen_ai.system: "anthropic"
+          gen_ai.request.model: "claude-3-opus"
+        value: 150
+      - name: "gen_ai.client.token.usage"
+        attributes:
+          gen_ai.token.type: "output"
+          gen_ai.system: "anthropic"
+          gen_ai.request.model: "claude-3-opus"
+        value: 75
+      - name: "gen_ai.client.operation.duration"
+        attributes:
+          gen_ai.system: "anthropic"
+          gen_ai.operation.name: "chat"
+          gen_ai.request.model: "claude-3-opus"
+
+# Schema validation against OpenTelemetry GenAI SIG
+schema_validation:
+  span_schema: "span.gen_ai.client"
+  event_schemas:
+    - "event.gen_ai.user.message"
+    - "event.gen_ai.assistant.message"
+  metric_schemas:
+    - "metric.gen_ai.client.token.usage"
+    - "metric.gen_ai.client.operation.duration"

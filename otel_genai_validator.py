@@ -52,7 +52,12 @@ class OTelGenAIValidator:
     def _init_provider(self):
         """Initialize a global tracer provider"""
         if self._provider is None:
-            self._provider = TracerProvider()
+            # Initialize with a default resource to avoid "unknown_service"
+            default_resource = Resource(attributes={
+                "service.name": "genai-validator",
+                "service.version": "0.1.0"
+            })
+            self._provider = TracerProvider(resource=default_resource)
             trace.set_tracer_provider(self._provider)
     
     def setup_test(self, service_name):
@@ -67,27 +72,34 @@ class OTelGenAIValidator:
             memory_exporter: In-memory exporter for validation
             processors: List of span processors that need cleanup
         """
-        # Create resource with service name
-        resource = Resource(attributes={"service.name": service_name})
+        # Create a new isolated TracerProvider with service-specific resource
+        resource = Resource(attributes={
+            "service.name": service_name,
+            "service.version": "0.1.0",
+            "deployment.environment": "testing"
+        })
+        
+        # Create a new provider for this test to properly set the service name
+        test_provider = TracerProvider(resource=resource)
         
         # Use InMemorySpanExporter for validation
         memory_exporter = InMemorySpanExporter()
         memory_processor = SimpleSpanProcessor(memory_exporter)
+        test_provider.add_span_processor(memory_processor)
         
         processors = [memory_processor]
-        provider = trace.get_tracer_provider()
-        provider.add_span_processor(memory_processor)
         
         # Optionally send to OTLP for visualization
         if self.enable_otlp:
             otlp_exporter = OTLPSpanExporter(endpoint=self.otlp_endpoint, insecure=True)
             otlp_processor = BatchSpanProcessor(otlp_exporter)
-            provider.add_span_processor(otlp_processor)
+            test_provider.add_span_processor(otlp_processor)
             processors.append(otlp_processor)
         
         logger.info(f"Set up test environment for service: {service_name}")
-        # Return a test-specific tracer
-        return trace.get_tracer(f"{service_name}-tracer"), memory_exporter, processors
+        
+        # Return a test-specific tracer using the isolated provider
+        return test_provider.get_tracer(f"{service_name}-tracer"), memory_exporter, processors
     
     def cleanup_test(self, processors):
         """

@@ -1,9 +1,41 @@
-# improvement_plan.md
 # Improvement Plan for GenAI Validation Framework
 
 This document addresses the key improvement opportunities identified in the code review of the OpenTelemetry GenAI Validation Framework.
 
-## 1. Dependency Management
+## Recent Improvements and Next Steps
+
+### ✅ Implemented: Scenario-Based Testing
+
+We've added support for scenario-based testing with YAML files:
+
+- Created a `scenarios/` directory with well-defined YAML scenarios
+- Added structured validation against OpenTelemetry GenAI SIG schemas
+- Implemented a `scenario_runner.py` that can execute these scenarios
+- Aligned the scenarios with official OpenTelemetry GenAI semantic conventions
+
+### ✅ Implemented: Enhanced Schema Integration
+
+Enhanced schema integration to better work with OpenTelemetry GenAI SIG schemas:
+
+- Improved `schema_integration.py` to load and validate against official schemas
+- Added support for span, event, and metric schema validation
+- Created a more comprehensive schema registry
+
+### Next Steps in Progress
+
+1. **Unified Validator Implementation**
+   - Create a unified validator class that combines both approaches
+   - Support both trace and metrics validation
+   - Add consistent interface across all tools
+
+2. **Test Scenario Consolidation**
+   - Move all test scenario implementations to a common module
+   - Make scenarios compatible with both validators
+   - Remove duplicated code
+
+## Original Improvement Plan (Still Valid)
+
+### 1. Dependency Management
 
 **Issue**: Duplicated dependency lists in `setup.py` and `check_dependencies()`.
 
@@ -34,14 +66,9 @@ def get_required_packages():
                 packages.append(package.group(1))
         return packages
     return []
-
-def check_dependencies():
-    """Check that all required dependencies are installed"""
-    required_packages = get_required_packages()
-    # Rest of the function as before
 ```
 
-## 2. Test Isolation
+### 2. Test Isolation
 
 **Issue**: Shared `TracerProvider` across tests risks cross-test contamination.
 
@@ -74,7 +101,7 @@ def setup_test(self, service_name):
     return test_provider.get_tracer(f"{service_name}-tracer"), memory_exporter, processors
 ```
 
-## 3. Dynamic Test Registration
+### 3. Dynamic Test Registration
 
 **Issue**: Hardcoded `TEST_SCENARIOS` mapping in `validation_suite.py`.
 
@@ -98,16 +125,7 @@ def run_basic_agent_test(validator):
 from genai_test_scenarios import TEST_REGISTRY as TEST_SCENARIOS
 ```
 
-## 4. Semantic Convention Validation
-
-**Issue**: Placeholder `validate_semantic_conventions()` method.
-
-**Implementation Plan**:
-- The new `semantic_validator.py` file implements this functionality
-- Integration through `schema_integration_example.py`
-- Update README with instructions for using schema validation
-
-## 5. Tool Span Validation
+### 4. Tool Span Validation
 
 **Issue**: `verify_tool_span()` may miss multi-tool scenarios.
 
@@ -146,7 +164,7 @@ def verify_tool_span(spans, parent_span_id, tool_name=None, expected_count=1):
         return tool_spans[0] if expected_count == 1 else tool_spans
 ```
 
-## 6. Error Handling Tests
+### 5. Error Handling Tests
 
 **Issue**: Custom `retry.count` attribute lacks documentation.
 
@@ -171,7 +189,7 @@ def run_error_handling_test(validator):
     """
 ```
 
-## 7. Test Parameterization
+### 6. Test Parameterization
 
 **Issue**: Hardcoded model/tool names limit reusability.
 
@@ -207,70 +225,35 @@ def run_basic_agent_test(validator, provider="anthropic", model=None):
     # Test using the configured model...
 ```
 
-## 8. Additional Recommendations
-
-### 8.1 Command-Line Improvements
-```python
-# Add to validation_suite.py arguments
-parser.add_argument(
-    "--model", 
-    type=str,
-    help="Specific model to test (e.g., gpt-4o, claude-3-opus)"
-)
-parser.add_argument(
-    "--provider",
-    type=str,
-    choices=["openai", "anthropic", "mistral", "all"],
-    default="all",
-    help="Specific provider to test"
-)
-```
-
-### 8.2 Parallel Test Execution
-```python
-# Add concurrent execution support to validation_suite.py
-import concurrent.futures
-
-def run_validation_suite_parallel():
-    """Run tests in parallel"""
-    # Setup similar to serial version
-    
-    # Run tests in parallel
-    with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
-        future_to_test = {
-            executor.submit(run_test, name, func, validator): (test_id, name)
-            for test_id, (name, func) in tests
-        }
-        
-        for future in concurrent.futures.as_completed(future_to_test):
-            test_id, name = future_to_test[future]
-            try:
-                success, error = future.result()
-                # Process results
-            except Exception as e:
-                # Handle exceptions
-```
-
-## Implementation Timeline
+## Updated Implementation Timeline
 
 1. **Immediate (1-2 days):**
-   - Fix dependency management
-   - Add documentation for custom attributes
-   - Enhance tool span validation
+   - Complete the Unified Validator implementation
+   - Finish scenario runner integration with existing tests
 
 2. **Short-term (1 week):**
    - Implement test isolation
-   - Add schema validation integration
-   - Implement test parameterization
+   - Add support for loading scenarios directly from YAML files
+   - Fix dependency management
 
 3. **Medium-term (2-3 weeks):**
    - Dynamic test registration
-   - Parallel test execution
-   - Enhanced CLI capabilities
+   - Test parameterization
+   - Create more comprehensive validation scenarios
 
-## Next Steps
+## Additional Future Enhancements
 
-1. Implement high-priority fixes (dependency management, test isolation)
-2. Add schema validation support
-3. Update documentation with all changes
-4. Create integration examples for different OpenTelemetry backends
+1. **OpenInference Compatibility Layer**
+   - Add optional support for reading OpenInference JSONL formats
+   - Create converters between OpenTelemetry and OpenInference formats
+   - Support hybrid testing approaches
+
+2. **Continuous Integration Support**
+   - Add GitHub Actions workflow for automated testing
+   - Create Docker container for easy deployment
+   - Publish to PyPI for easier installation
+
+3. **Documentation Improvements**
+   - Create comprehensive documentation site
+   - Add detailed examples for common use cases
+   - Create tutorials for different GenAI frameworks

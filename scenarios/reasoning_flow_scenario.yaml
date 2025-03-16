@@ -1,0 +1,82 @@
+# Multi-step Reasoning Flow Test Scenario
+name: "Multi-step Reasoning Flow Test"
+description: "Tests a complex reasoning flow with multiple nested thinking steps"
+version: "1.0"
+
+# Test configuration
+configuration:
+  service_name: "reasoning-agent"
+  trace_validation: true
+  metrics_validation: true
+
+# Expected spans and events
+spans:
+  - name: "chain_of_thought"
+    expected_attributes:
+      gen_ai.operation.name: "agent"
+      gen_ai.system: "openai"
+      gen_ai.agent.name: "reasoning-agent"
+      gen_ai.request.model: "gpt-4o"
+    child_spans:
+      - name: "step1_analyze"
+        expected_attributes:
+          gen_ai.operation.name: "thinking"
+        expected_events:
+          - name: "reasoning_step"
+            attributes:
+              thought: "Let me analyze this math problem step by step."
+      - name: "step2_generate_options"
+        expected_attributes:
+          gen_ai.operation.name: "thinking"
+        expected_events:
+          - name: "reasoning_step"
+            attributes:
+              thought: "I need to find the derivative of x²sin(x)"
+      - name: "step3_evaluate"
+        expected_attributes:
+          gen_ai.operation.name: "thinking"
+        expected_events:
+          - name: "reasoning_step"
+            attributes:
+              thought: "Using the product rule: d/dx[x²sin(x)] = 2xsin(x) + x²cos(x)"
+      - name: "step4_decide"
+        expected_attributes:
+          gen_ai.operation.name: "thinking"
+        expected_events:
+          - name: "reasoning_step"
+            attributes:
+              thought: "The final answer is 2xsin(x) + x²cos(x)"
+    expected_metrics:
+      - name: "gen_ai.client.token.usage"
+        attributes:
+          gen_ai.token.type: "input"
+          gen_ai.system: "openai"
+          gen_ai.request.model: "gpt-4o"
+        value: 200
+      - name: "gen_ai.client.token.usage"
+        attributes:
+          gen_ai.token.type: "output"
+          gen_ai.system: "openai"
+          gen_ai.request.model: "gpt-4o"
+        value: 120
+      - name: "gen_ai.client.operation.duration"
+        attributes:
+          gen_ai.system: "openai"
+          gen_ai.operation.name: "agent"
+          gen_ai.request.model: "gpt-4o"
+
+# Schema validation against OpenTelemetry GenAI SIG
+schema_validation:
+  span_schemas:
+    - "span.gen_ai.client"
+  event_schemas: []  # Custom reasoning events not in standard schema
+  metric_schemas:
+    - "metric.gen_ai.client.token.usage"
+    - "metric.gen_ai.client.operation.duration"
+
+# Additional validation rules
+validation_rules:
+  - rule: "span_hierarchy_depth"
+    value: 2  # Expect parent span + child spans (depth 2)
+  - rule: "child_span_count"
+    value: 4  # Expect 4 child spans

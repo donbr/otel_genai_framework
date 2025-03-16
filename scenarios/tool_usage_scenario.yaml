@@ -1,0 +1,71 @@
+# Tool Usage Test Scenario
+name: "Tool Usage Test"
+description: "Tests an agent using external tools with proper span hierarchy"
+version: "1.0"
+
+# Test configuration
+configuration:
+  service_name: "agent-with-tools"
+  trace_validation: true
+  metrics_validation: true
+
+# Expected spans and events
+spans:
+  - name: "chat gpt-4o"
+    expected_attributes:
+      gen_ai.system: "openai"
+      gen_ai.operation.name: "chat"
+      gen_ai.request.model: "gpt-4o"
+    expected_events:
+      - name: "gen_ai.user.message"
+        attributes:
+          content: "What's the weather in Paris?"
+      - name: "gen_ai.assistant.message"
+        attributes:
+          tool_calls: '[{"id":"call_abc123","type":"function","function":{"name":"get_weather","arguments":"{\"location\":\"Paris\"}"}}]'
+      - name: "gen_ai.assistant.message"
+        attributes:
+          content: "The weather in Paris is rainy with a temperature of 57°F."
+    child_spans:
+      - name: "execute_tool get_weather"
+        expected_attributes:
+          gen_ai.operation.name: "execute_tool"
+          gen_ai.tool.name: "get_weather"
+          gen_ai.tool.call.id: "call_abc123"
+        expected_events:
+          - name: "gen_ai.tool.message"
+            attributes:
+              content: "rainy, 57°F"
+              id: "call_abc123"
+              role: "tool"
+    expected_metrics:
+      - name: "gen_ai.client.token.usage"
+        attributes:
+          gen_ai.token.type: "input"
+          gen_ai.system: "openai"
+          gen_ai.request.model: "gpt-4o"
+        value: 25
+      - name: "gen_ai.client.token.usage"
+        attributes:
+          gen_ai.token.type: "output"
+          gen_ai.system: "openai"
+          gen_ai.request.model: "gpt-4o"
+        value: 35
+      - name: "gen_ai.client.operation.duration"
+        attributes:
+          gen_ai.system: "openai"
+          gen_ai.operation.name: "chat"
+          gen_ai.request.model: "gpt-4o"
+
+# Schema validation against OpenTelemetry GenAI SIG
+schema_validation:
+  span_schemas:
+    - "span.gen_ai.client"
+    - "span.gen_ai.execute_tool.internal"
+  event_schemas:
+    - "event.gen_ai.user.message"
+    - "event.gen_ai.assistant.message"
+    - "event.gen_ai.tool.message"
+  metric_schemas:
+    - "metric.gen_ai.client.token.usage"
+    - "metric.gen_ai.client.operation.duration"

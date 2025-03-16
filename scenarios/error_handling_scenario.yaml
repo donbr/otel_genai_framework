@@ -1,0 +1,88 @@
+# Error Handling Test Scenario
+name: "Error Handling Test"
+description: "Tests an agent's ability to handle errors and implement retries"
+version: "1.0"
+
+# Test configuration
+configuration:
+  service_name: "resilient-agent"
+  trace_validation: true
+  metrics_validation: true
+
+# Expected spans and events
+spans:
+  - name: "chat gpt-4o"
+    expected_attributes:
+      gen_ai.system: "openai"
+      gen_ai.operation.name: "chat"
+      gen_ai.request.model: "gpt-4o"
+    expected_events:
+      - name: "gen_ai.user.message"
+        attributes:
+          content: "Show me today's top headline from The New York Times"
+      - name: "error_handling"
+        attributes:
+          decision: "Retry tool call with backoff"
+      - name: "gen_ai.assistant.message"
+        attributes:
+          content: "Today's top headline from The New York Times is: 'Global AI Summit Addresses Ethical Concerns'"
+    child_spans:
+      - name: "execute_tool news_api_lookup"
+        expected_attributes:
+          gen_ai.operation.name: "execute_tool"
+          gen_ai.tool.name: "news_api_lookup"
+          retry.count: 0
+        expected_status:
+          status_code: "ERROR"
+          description: "API rate limit exceeded"
+        expected_exception:
+          type: "rate_limit_exceeded"
+          message: "Rate limit exceeded: try again later"
+      - name: "execute_tool news_api_lookup"
+        expected_attributes:
+          gen_ai.operation.name: "execute_tool"
+          gen_ai.tool.name: "news_api_lookup"
+          retry.count: 1
+        expected_events:
+          - name: "gen_ai.tool.message"
+            attributes:
+              content: "Headline: 'Global AI Summit Addresses Ethical Concerns'"
+              role: "tool"
+    expected_metrics:
+      - name: "gen_ai.client.token.usage"
+        attributes:
+          gen_ai.token.type: "input"
+          gen_ai.system: "openai"
+          gen_ai.request.model: "gpt-4o"
+        value: 40
+      - name: "gen_ai.client.token.usage"
+        attributes:
+          gen_ai.token.type: "output"
+          gen_ai.system: "openai"
+          gen_ai.request.model: "gpt-4o"
+        value: 65
+      - name: "gen_ai.client.operation.duration"
+        attributes:
+          gen_ai.system: "openai"
+          gen_ai.operation.name: "chat"
+          gen_ai.request.model: "gpt-4o"
+
+# Schema validation against OpenTelemetry GenAI SIG
+schema_validation:
+  span_schemas:
+    - "span.gen_ai.client"
+    - "span.gen_ai.execute_tool.internal"
+  event_schemas:
+    - "event.gen_ai.user.message"
+    - "event.gen_ai.assistant.message"
+    - "event.gen_ai.tool.message"
+  metric_schemas:
+    - "metric.gen_ai.client.token.usage"
+    - "metric.gen_ai.client.operation.duration"
+
+# Additional validation rules
+validation_rules:
+  - rule: "retried_operation_count"
+    value: 1  # Expect 1 retried operation
+  - rule: "error_span_count"
+    value: 1  # Expect 1 error span
