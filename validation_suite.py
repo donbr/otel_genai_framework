@@ -27,8 +27,8 @@ from rich.table import Table
 from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.traceback import install as install_rich_traceback
-from schema_integration import enhance_validator_with_schema
-from otel_genai_validator import GenAISpanValidator
+from src.schema_integration import enhance_validator_with_schema
+from src.otel_genai_validator import GenAISpanValidator
 
 # Configure console
 console = Console()
@@ -106,7 +106,7 @@ def run_test(test_name, test_func_name, validator):
     Returns:
         tuple: (success, error_message)
     """
-    from genai_test_scenarios import (
+    from src.genai_test_scenarios import (
         run_basic_agent_test,
         run_reasoning_flow_test,
         run_tool_usage_test,
@@ -162,7 +162,7 @@ def run_validation_suite():
         return 1
     
     # Import after dependency check
-    from otel_genai_validator import OTelGenAIValidator
+    from src.otel_genai_validator import OTelGenAIValidator
     
     # Print header
     console.print(Panel(

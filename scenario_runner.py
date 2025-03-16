@@ -30,7 +30,7 @@ from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.traceback import install as install_rich_traceback
 
 # Import the validator (will be updated to work with unified_validator.py once created)
-from otel_genai_validator import OTelGenAIValidator, GenAISpanValidator
+from src.otel_genai_validator import OTelGenAIValidator, GenAISpanValidator
 
 # Configure console output
 console = Console()

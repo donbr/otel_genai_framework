@@ -67,7 +67,7 @@ def run_basic_agent_test(validator):
         spans = memory_exporter.get_finished_spans()
         assert len(spans) == 1, f"Expected 1 span, got {len(spans)}"
         
-        from otel_genai_validator import GenAISpanValidator
+        from src.otel_genai_validator import GenAISpanValidator
         
         root_span = spans[0]
         GenAISpanValidator.verify_genai_span_attributes(root_span, {
@@ -179,7 +179,7 @@ def run_reasoning_flow_test(validator):
         spans = memory_exporter.get_finished_spans()
         assert len(spans) == 5, f"Expected 5 spans (1 parent + 4 steps), got {len(spans)}"
         
-        from otel_genai_validator import GenAISpanValidator
+        from src.otel_genai_validator import GenAISpanValidator
         
         # Find root span
         root_span = next((s for s in spans if s.name == "chain_of_thought"), None)
@@ -299,7 +299,7 @@ def run_tool_usage_test(validator):
         spans = memory_exporter.get_finished_spans()
         assert len(spans) == 2, f"Expected 2 spans, got {len(spans)}"
         
-        from otel_genai_validator import GenAISpanValidator
+        from src.otel_genai_validator import GenAISpanValidator
         
         # Find and validate parent span
         root_span = next((s for s in spans if s.name == "chat gpt-4o"), None)
@@ -448,7 +448,7 @@ def run_error_handling_test(validator):
         spans = memory_exporter.get_finished_spans()
         assert len(spans) == 3, f"Expected 3 spans, got {len(spans)}"
         
-        from otel_genai_validator import GenAISpanValidator
+        from src.otel_genai_validator import GenAISpanValidator
         
         # Verify parent span
         root_span = next((s for s in spans if s.name == "chat gpt-4o"), None)

@@ -146,7 +146,7 @@ validator = SchemaValidator()
 2. Enhance the validator with schema capabilities:
 ```python
 from schema_integration import enhance_validator_with_schema
-from otel_genai_validator import GenAISpanValidator
+from src.otel_genai_validator import GenAISpanValidator
 
 # Enhance the validator with schema capabilities
 enhance_validator_with_schema(GenAISpanValidator)
