@@ -27,10 +27,13 @@ from rich.table import Table
 from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.traceback import install as install_rich_traceback
+from schema_integration import enhance_validator_with_schema
+from otel_genai_validator import GenAISpanValidator
 
 # Configure console
 console = Console()
 install_rich_traceback(console=console, show_locals=True)
+enhance_validator_with_schema(GenAISpanValidator)
 
 # Test mapping
 TEST_SCENARIOS = {

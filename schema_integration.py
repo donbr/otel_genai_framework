@@ -54,30 +54,43 @@ class SchemaRegistry:
         if missing_files:
             logger.info(f"Missing schema files: {missing_files}, downloading...")
             self.download_schemas()
+            
+        # Verify again after attempted download
+        still_missing = [f for f in schema_files if not os.path.exists(os.path.join(self.schema_dir, f))]
+        if still_missing:
+            logger.error(f"Still missing required schema files after attempted download: {still_missing}")
+            logger.error("You may need to create these files manually based on the documentation")
     
     def download_schemas(self):
         """Download the latest schema files from OpenTelemetry GitHub"""
         # Base URL for raw content from the OpenTelemetry specification repo
-        base_url = "https://raw.githubusercontent.com/open-telemetry/opentelemetry-specification/main/semantic_conventions"
+        base_url = "https://raw.githubusercontent.com/open-telemetry/semantic-conventions/main/model"
+
         
         # Schema files to download
         schema_files = [
-            "genai/spans.yaml",
-            "genai/events.yaml", 
-            "genai/metrics.yaml",
-            "genai/registry.yaml"
+            "gen-ai/spans.yaml",
+            "gen-ai/events.yaml", 
+            "gen-ai/metrics.yaml",
+            "gen-ai/registry.yaml"
         ]
         
         for schema_file in schema_files:
             url = f"{base_url}/{schema_file}"
             local_path = os.path.join(self.schema_dir, os.path.basename(schema_file))
             
+            # Skip download if file already exists
+            if os.path.exists(local_path):
+                logger.info(f"Schema file already exists: {local_path}, skipping download")
+                continue
+            
             try:
                 logger.info(f"Downloading schema: {url}")
                 urlretrieve(url, local_path)
                 logger.info(f"Downloaded to: {local_path}")
             except Exception as e:
-                logger.error(f"Failed to download schema {schema_file}: {str(e)}")
+                logger.warning(f"Failed to download schema {schema_file}: {str(e)}")
+                logger.info(f"Using local schema file if available: {local_path}")
     
     def load_schemas(self):
         """Load schema files into memory"""
@@ -86,41 +99,43 @@ class SchemaRegistry:
         
         self.ensure_schemas()
         
-        try:
-            # Load spans schema
-            with open(os.path.join(self.schema_dir, "spans.yaml"), 'r') as f:
-                spans_data = yaml.safe_load(f)
-                for group in spans_data.get('groups', []):
-                    if group.get('type') == 'span':
-                        self.schemas['spans'][group.get('id')] = group
-            
-            # Load events schema
-            with open(os.path.join(self.schema_dir, "events.yaml"), 'r') as f:
-                events_data = yaml.safe_load(f)
-                for group in events_data.get('groups', []):
-                    if group.get('type') == 'event':
-                        self.schemas['events'][group.get('id')] = group
-            
-            # Load metrics schema
-            with open(os.path.join(self.schema_dir, "metrics.yaml"), 'r') as f:
-                metrics_data = yaml.safe_load(f)
-                for group in metrics_data.get('groups', []):
-                    if group.get('type') == 'metric':
-                        self.schemas['metrics'][group.get('id')] = group
-            
-            # Load registry schema
-            with open(os.path.join(self.schema_dir, "registry.yaml"), 'r') as f:
-                registry_data = yaml.safe_load(f)
-                for group in registry_data.get('groups', []):
-                    self.schemas['registry'][group.get('id')] = group
-            
+        for schema_type, filename in [
+            ('spans', "spans.yaml"),
+            ('events', "events.yaml"),
+            ('metrics', "metrics.yaml"),
+            ('registry', "registry.yaml")
+        ]:
+            try:
+                file_path = os.path.join(self.schema_dir, filename)
+                if not os.path.exists(file_path):
+                    logger.warning(f"Schema file {filename} not found, skipping")
+                    continue
+                    
+                with open(file_path, 'r') as f:
+                    data = yaml.safe_load(f)
+                    for group in data.get('groups', []):
+                        # For spans and events and metrics, match by type
+                        if schema_type in ['spans', 'events', 'metrics']:
+                            expected_type = schema_type[:-1]  # Remove 's' to get singular type
+                            if group.get('type') == expected_type:
+                                self.schemas[schema_type][group.get('id')] = group
+                        # For registry, include all groups
+                        else:
+                            self.schemas[schema_type][group.get('id')] = group
+                            
+                logger.info(f"Successfully loaded schema: {filename}")
+                            
+            except Exception as e:
+                logger.error(f"Error loading schema {filename}: {str(e)}")
+        
+        total_schemas = sum(len(schemas) for schemas in self.schemas.values())
+        if total_schemas > 0:
             self.loaded = True
             logger.info(f"Loaded {len(self.schemas['spans'])} span schemas, "
                        f"{len(self.schemas['events'])} event schemas, and "
                        f"{len(self.schemas['metrics'])} metric schemas")
-        
-        except Exception as e:
-            logger.error(f"Error loading schemas: {str(e)}")
+        else:
+            logger.warning("No schemas were loaded successfully. Validation may be limited.")
     
     def get_span_schema(self, schema_id: str) -> Optional[Dict]:
         """
