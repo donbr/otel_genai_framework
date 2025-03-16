@@ -78,28 +78,6 @@ python validation_suite.py --test error
 python validation_suite.py --debug --test basic
 ```
 
-### Using Scenario-Based Testing
-
-The recommended approach for new tests is to use scenario-based testing with YAML definitions:
-
-```bash
-# Run a specific scenario from YAML file
-python scenario_runner.py --scenario scenarios/basic_agent_scenario.yaml
-
-# Run with debug logging
-python scenario_runner.py --scenario scenarios/tool_usage_scenario.yaml --debug
-
-# Skip metrics validation
-python scenario_runner.py --scenario scenarios/reasoning_flow_scenario.yaml --no-metrics
-```
-
-### Options
-
-- `--skip-otlp`: Skip sending telemetry to OTLP endpoint (useful for isolated testing without Jaeger)
-- `--debug`: Enable debug logging
-- `--test TEST`: Run only the specified test (`basic`, `tool`, `reasoning`, `error`, or `all`)
-- `--no-metrics`: Disable metrics collection (for scenario_runner.py)
-
 ## Test Scenarios
 
 The framework includes the following test scenarios:
@@ -196,7 +174,6 @@ otel_genai_framework/
 ├── otel_genai_validator.py       # Core validation framework
 ├── validation_suite.py           # Main test runner
 ├── genai_test_scenarios.py       # Test scenario implementations
-├── scenario_runner.py            # YAML scenario runner
 ├── schema_integration.py         # Schema validation integration
 ├── semantic_validator.py         # Schema validation utilities
 ├── scenarios/                    # YAML test scenario definitions
