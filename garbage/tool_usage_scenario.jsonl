@@ -1,8 +1,0 @@
-{"type": "Metadata", "id": "scenario2", "name": "Tool Usage Test", "description": "Tests an agent using external tools with proper span hierarchy"}
-{"type": "LLMRequest", "id": "req1", "inputs": {"model": "gpt-4o", "system": "openai", "messages": [{"role": "user", "content": "What's the weather in Paris?"}]}}
-{"type": "ToolCallRequested", "id": "tool_req1", "request_id": "req1", "tool": {"name": "get_weather", "arguments": {"location": "Paris"}}}
-{"type": "ToolCallResponse", "id": "tool_resp1", "request_id": "tool_req1", "outputs": {"content": "rainy, 57°F"}}
-{"type": "LLMResponse", "id": "resp1", "request_id": "req1", "outputs": {"content": "The weather in Paris is rainy with a temperature of 57°F."}, "usage": {"input_tokens": 25, "output_tokens": 35}}
-{"type": "OTelValidation", "id": "validation1", "target_id": "req1", "rules": {"span_name": "chat gpt-4o", "attributes": {"gen_ai.system": "openai", "gen_ai.operation.name": "chat", "gen_ai.request.model": "gpt-4o"}}}
-{"type": "OTelValidation", "id": "validation2", "target_id": "tool_req1", "rules": {"span_name": "execute_tool get_weather", "attributes": {"gen_ai.operation.name": "execute_tool", "gen_ai.tool.name": "get_weather"}}}
-{"type": "OTelValidation", "id": "validation3", "target_id": "resp1", "rules": {"required_events": ["gen_ai.user.message", "gen_ai.assistant.message", "gen_ai.tool.message"]}}

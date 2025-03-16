@@ -1,5 +1,0 @@
-{"type": "Metadata", "id": "scenario1", "name": "Basic Agent Test", "description": "Tests a simple query-response pattern with a GenAI agent"}
-{"type": "LLMRequest", "id": "req1", "inputs": {"model": "claude-3-opus", "system": "anthropic", "messages": [{"role": "user", "content": "What is the capital of France?"}]}}
-{"type": "LLMResponse", "id": "resp1", "request_id": "req1", "outputs": {"content": "The capital of France is Paris."}, "usage": {"input_tokens": 150, "output_tokens": 75}}
-{"type": "OTelValidation", "id": "validation1", "target_id": "req1", "rules": {"span_name": "chat claude-3-opus", "attributes": {"gen_ai.system": "anthropic", "gen_ai.operation.name": "chat", "gen_ai.request.model": "claude-3-opus"}}}
-{"type": "OTelValidation", "id": "validation2", "target_id": "resp1", "rules": {"events": ["gen_ai.user.message", "gen_ai.assistant.message"], "metrics": ["gen_ai.client.token.usage", "gen_ai.client.operation.duration"]}}
