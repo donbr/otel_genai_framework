@@ -11,6 +11,7 @@ processors:
 
 exporters:
   debug:
+    verbosity: detailed
   otlp:
     endpoint: "jaeger:4317"
     tls:
@@ -20,7 +21,12 @@ exporters:
     tls:
       insecure: true
 
+extensions:
+  zpages:
+    endpoint: 0.0.0.0:55679
+
 service:
+  extensions: [zpages]
   pipelines:
     traces:
       receivers: [otlp]
@@ -30,3 +36,7 @@ service:
       receivers: [otlp]
       processors: [batch]
       exporters: [otlphttp/prometheus, debug]
+    logs:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [debug]
