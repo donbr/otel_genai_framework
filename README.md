@@ -182,7 +182,7 @@ otel_genai_framework/
 └── src/                          # Core source code for the validation framework components
 ```
 
-For more details, see [project_structure.md](project_structure.md).
+For more details on the GenAI focused OpenTelemetry platform, see the [otel-platform README.md](./otel-platform/README.md).
 
 ## Contributing
 
