@@ -39,7 +39,7 @@ docker-compose ps
 
 - **Jaeger UI**: http://localhost:16686
 - **Prometheus UI**: http://localhost:9090
-- **OpenTelemetry Collector zPages**: http://localhost:55679
+- **OpenTelemetry Collector zPages**: http://localhost:55679/debug/tracez
 
 ## Component Configuration
 
