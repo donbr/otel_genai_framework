@@ -121,7 +121,7 @@ end
   - GO based `telemetrygen` tool
     - [Quick Start guide](https://opentelemetry.io/docs/collector/quick-start/): installation instructions
     - [Using the tool](https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/main/cmd/telemetrygen/README.md): provides basic requests for validating metrics, logs, and traces
-  - [curl based JSON requests](https://github.com/open-telemetry/opentelemetry-proto/blob/main/examples/README.md): used to validate non-gRPC requests
+  - [curl based JSON requests](https://github.com/open-telemetry/opentelemetry-proto/blob/main/examples/README.md): used to validate the non-gRPC endpoint
 
 ### Quickstart using TraceZ
 
