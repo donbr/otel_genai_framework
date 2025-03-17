@@ -170,14 +170,16 @@ The framework consists of several key components:
 
 ```
 otel_genai_framework/
-├── README.md                     # Project documentation
-├── otel_genai_validator.py       # Core validation framework
-├── validation_suite.py           # Main test runner
-├── genai_test_scenarios.py       # Test scenario implementations
-├── schema_integration.py         # Schema validation integration
-├── semantic_validator.py         # Schema validation utilities
-├── scenarios/                    # YAML test scenario definitions
-└── schemas/                      # Auto-downloaded OTel schema files
+├── README.md                     # Main project documentation and getting started guide
+├── background.md                 # Overview of OpenTelemetry standards and their value for GenAI
+├── validation_suite.py           # Main test runner for executing validation scenarios
+├── scenario_runner.py            # Utility for running individual test scenarios from YAML files
+├── otel-platform/                # Docker Compose setup for local OpenTelemetry observability stack
+├── scenarios/                    # YAML definitions for test scenarios (basic, tool usage, reasoning, errors)
+├── schemas/                      # Auto-downloaded OpenTelemetry GenAI schema files for validation
+├── docs/                         # Additional documentation (quickstart guides, architecture diagrams)
+├── notebooks/                    # Jupyter notebooks for interactive exploration and validation examples
+└── src/                          # Core source code for the validation framework components
 ```
 
 For more details, see [project_structure.md](project_structure.md).
@@ -188,4 +190,4 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+Licensing is determined by the [OpenTelemetry standard](https://github.com/open-telemetry/opentelemetry-collector/blob/main/LICENSE).
