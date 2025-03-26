@@ -8,10 +8,12 @@ The OpenTelemetry GenAI framework provides a standardized approach for instrumen
 
 If you're interested in contributing to these standards:
 
-1. **[OpenTelemetry GenAI Special Interest Group](https://github.com/open-telemetry/community/blob/main/projects/gen-ai.md)**: Join the GenAI SIG
-2. **[Semantic Conventions Repository](https://github.com/open-telemetry/semantic-conventions)**: Review and contribute to the semantic conventions
-3. **[OpenTelemetry Community Meetings](https://opentelemetry.io/community/)**: Participate in community discussions
-4. **[Best Practices](https://opentelemetry.io/blog/2025/ai-agent-observability/)**: Help raise the bar and establish best practices in this rapidly evolving field
+- **[OpenTelemetry GenAI Special Interest Group](https://github.com/open-telemetry/community/blob/main/projects/gen-ai.md)**: Join the GenAI SIG
+  - [WG Meeting Minutes and Recordings](https://docs.google.com/document/d/1EKIeDgBGXQPGehUigIRLwAUpRGa7-1kXB736EaYuJ2M/edit?tab=t.0#heading=h.ylazl6464n0c)
+  - [OpenTelemetry Meeting Calendar](https://calendar.google.com/calendar/u/0/embed?src=c_2bf73e3b6b530da4babd444e72b76a6ad893a5c3f43cf40467abc7a9a897f977@group.calendar.google.com)
+- **[Semantic Conventions Repository](https://github.com/open-telemetry/semantic-conventions)**: Review and contribute to the semantic conventions
+- **[OpenTelemetry Community Meetings](https://opentelemetry.io/community/)**: Participate in community discussions
+- **[Best Practices](https://opentelemetry.io/blog/2025/ai-agent-observability/)**: Help raise the bar and establish best practices in this rapidly evolving field
 
 ## Key Standards
 
